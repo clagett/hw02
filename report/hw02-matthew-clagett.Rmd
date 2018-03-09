@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE, fig.path = '../images/')
 
 ```{r}
 library(dplyr)
+library(ggplot2)
 ```
 
 ### Total number of shots (2PT and 3PT, both made and missed) by player, arranged in descending order
@@ -22,7 +23,7 @@ shots %>% group_by(name) %>% summarise(total = sum(shot_made_flag == "made shot"
 ```
 
 ### Create the three tables listed below to summarize Effective Sooting percentages by player.
-#### 1. Effective Shooting % by Player: Overall effective shooting percentage by player, arranged in descending order by percentage.
+##### 1. Effective Shooting % by Player: Overall effective shooting percentage by player, arranged in descending order by percentage.
 ```{r}
 shots %>% group_by(name) %>% 
      summarise(total = sum(!is.na(shot_made_flag)),
@@ -32,7 +33,7 @@ shots %>% group_by(name) %>%
 
 ```
 
-#### 2. 2PT Effective Shooting % by Player: 2 PT Field Goal effective shooting percentage by player, arranged in descending order by percentage.
+##### 2. 2PT Effective Shooting % by Player: 2 PT Field Goal effective shooting percentage by player, arranged in descending order by percentage.
 ```{r}
 shots %>% group_by(name) %>% 
      filter(shot_type == "2PT Field Goal") %>%
@@ -42,7 +43,7 @@ shots %>% group_by(name) %>%
      arrange(desc(perc_made))
 ```
 
-#### 3. 3PT Effective Shooting % by Player: 3 PT Field Goal effective shooting percentage by player, arranged in descending order by percentage
+##### 3. 3PT Effective Shooting % by Player: 3 PT Field Goal effective shooting percentage by player, arranged in descending order by percentage
 ```{r}
 shots %>% group_by(name) %>% 
      filter(shot_type == "3PT Field Goal") %>%
@@ -52,19 +53,25 @@ shots %>% group_by(name) %>%
      arrange(desc(perc_made))
 ```
 
-Consider the following question: the shorter the shooting distance, the higher the chance to successfully make a shot? Intuition and experience will suggest that YES. To confirm this, you will have to calculate, for each distance value, the proportion of made shots.
+###### Consider the following question: the shorter the shooting distance, the higher the chance to successfully make a shot? Intuition and experience will suggest that YES. To confirm this, you will have to calculate, for each distance value, the proportion of made shots.
 ```{r}
 shots_made_distance <- shots %>% group_by(shot_distance) %>% 
      summarise(made_shot_prop = sum(shot_made_flag == "made shot")/sum(!is.na(shot_made_flag)))
 shots_made_distance
 ```
-Use ggplot() to make a scatterplot with the variables shot_distance and made_shot_prop. Use the x axis for the shot distance, and the y axis for the proportion of made shots
+###### Use ggplot() to make a scatterplot with the variables shot_distance and made_shot_prop. Use the x axis for the shot distance, and the y axis for the proportion of made shots
 ```{r}
 ggplot(shots_made_distance) + geom_point(aes(x = shot_distance,
                                          y = made_shot_prop))
 ```
 It looks as though the shots that are made right at the basket, which are likely the dunks, layups, etc, are a very high proportion of made shots. The rest rest of the distances are very spread out, with a distance of about 18 ft being a good place to shoot from. At 51 ft, one person made a shot. After about 32 feet, it is very unlikely that a shot will be made, or attempted. Shots from 0-3 feet tend to have a percentage of 50% or more of shots made. There are also a few others at 12, 16, 18, and 30 feet that tend to be made more than 50% of the time. 
 
+###### Total number of shots for every player by minute of occurance
+```{r}
+shots_each_min <- shots %>% group_by(minute, name) %>% summarise(min_shots = sum(!is.na(name)))
+shade <- data.frame(x1=c(0,12), x2=c(24,36), y1=c(0,50), y2=c(0,50))
+ggplot(shots_each_min) + geom_path(aes(x=minute, y=min_shots)) + facet_grid(. ~ name) + scale_x_continuous() +
+     geom_rect(data = shade, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), fill="grey",alpha=0.5)
 
-
+```
 
