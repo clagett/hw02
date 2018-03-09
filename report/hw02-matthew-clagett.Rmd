@@ -1,0 +1,70 @@
+---
+title: "HW 02 - Shot Charts"
+author: "Matthew Clagett"
+date: "March 8, 2018"
+output: github_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path = '../images/')
+```
+
+```{r}
+library(dplyr)
+```
+
+### Total number of shots (2PT and 3PT, both made and missed) by player, arranged in descending order
+```{r}
+shots <- read.csv("../data/shots-data.csv")
+View(shots)
+shots %>% group_by(name) %>% summarise(total = sum(shot_made_flag == "made shot"))
+```
+
+### Create the three tables listed below to summarize Effective Sooting percentages by player.
+#### 1. Effective Shooting % by Player: Overall effective shooting percentage by player, arranged in descending order by percentage.
+```{r}
+shots %>% group_by(name) %>% 
+     summarise(total = sum(!is.na(shot_made_flag)),
+                                       made = sum(shot_made_flag == "made shot"),
+                                       perc_made = made/total) %>%
+     arrange(desc(perc_made))
+
+```
+
+#### 2. 2PT Effective Shooting % by Player: 2 PT Field Goal effective shooting percentage by player, arranged in descending order by percentage.
+```{r}
+shots %>% group_by(name) %>% 
+     filter(shot_type == "2PT Field Goal") %>%
+     summarise(total = sum(!is.na(shot_made_flag)),
+                                       made = sum(shot_made_flag == "made shot"),
+                                       perc_made = made/total) %>%
+     arrange(desc(perc_made))
+```
+
+#### 3. 3PT Effective Shooting % by Player: 3 PT Field Goal effective shooting percentage by player, arranged in descending order by percentage
+```{r}
+shots %>% group_by(name) %>% 
+     filter(shot_type == "3PT Field Goal") %>%
+     summarise(total = sum(!is.na(shot_made_flag)),
+                                       made = sum(shot_made_flag == "made shot"),
+                                       perc_made = made/total) %>%
+     arrange(desc(perc_made))
+```
+
+Consider the following question: the shorter the shooting distance, the higher the chance to successfully make a shot? Intuition and experience will suggest that YES. To confirm this, you will have to calculate, for each distance value, the proportion of made shots.
+```{r}
+shots_made_distance <- shots %>% group_by(shot_distance) %>% 
+     summarise(made_shot_prop = sum(shot_made_flag == "made shot")/sum(!is.na(shot_made_flag)))
+shots_made_distance
+```
+Use ggplot() to make a scatterplot with the variables shot_distance and made_shot_prop. Use the x axis for the shot distance, and the y axis for the proportion of made shots
+```{r}
+ggplot(shots_made_distance) + geom_point(aes(x = shot_distance,
+                                         y = made_shot_prop))
+```
+It looks as though the shots that are made right at the basket, which are likely the dunks, layups, etc, are a very high proportion of made shots. The rest rest of the distances are very spread out, with a distance of about 18 ft being a good place to shoot from. At 51 ft, one person made a shot. After about 32 feet, it is very unlikely that a shot will be made, or attempted. Shots from 0-3 feet tend to have a percentage of 50% or more of shots made. There are also a few others at 12, 16, 18, and 30 feet that tend to be made more than 50% of the time. 
+
+
+
+
